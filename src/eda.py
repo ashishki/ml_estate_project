@@ -4,7 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from typing import Optional
-from data_generation import generate_synthetic_data
+from .data_generation import generate_synthetic_data
 
 # Set up logging
 logging.basicConfig(
