@@ -3,7 +3,7 @@ contourpy
 coverage==7.7.0
 cycler==0.12.1
 fonttools==4.56.0
-imbalanced-learn==0.13.0
+imbalanced-learn>=0.12.4
 imblearn==0.0
 iniconfig==2.1.0
 joblib==1.4.2
