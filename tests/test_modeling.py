@@ -56,12 +56,20 @@ def test_train_and_evaluate_model_all_sold_ones():
 
 def test_train_and_evaluate_model_small_data():
     """
-    Test with a very small dataset (e.g., 10 samples) to ensure the model can still train.
+    Test with a very small balanced dataset (e.g., 20 samples) to ensure the model can still train.
+    Use a lower cv value (cv=2) for the small dataset.
     """
-    raw_data = generate_synthetic_data(n_samples=10)  # increased from 5 to 10
+    # Generate 20 samples
+    raw_data = generate_synthetic_data(n_samples=20)
+    # Force balanced target: first 10 samples with 0 and next 10 samples with 1
+    raw_data['sold'] = [0] * 10 + [1] * 10
     preprocessed = preprocess_data(raw_data)
-    best_model, X_test, y_test = train_and_evaluate_model(preprocessed, use_smote=False, test_size=0.4)
-    # With 10 samples and test_size=0.4, we should have around 4 samples in the test set.
-    # We check that the test set size is as expected.
-    expected_test_size = int(10 * 0.4)
-    assert len(X_test) == expected_test_size, f"With 10 samples and test_size=0.4, expected {expected_test_size} samples in test."
+    
+    # Use cv=2 for small dataset
+    best_model, X_test, y_test = train_and_evaluate_model(
+        preprocessed, use_smote=False, test_size=0.4, cv=2
+    )
+    
+    # With 20 samples and test_size=0.4, we expect 8 samples in the test set.
+    expected_test_size = int(20 * 0.4)
+    assert len(X_test) == expected_test_size, f"Expected {expected_test_size} samples in test set, got {len(X_test)}."

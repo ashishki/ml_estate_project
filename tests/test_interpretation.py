@@ -1,10 +1,11 @@
+
+import os
 import pytest
 import pandas as pd
 from src.data_generation import generate_synthetic_data
 from src.preprocessing import preprocess_data
 from src.modeling import train_and_evaluate_model
 from src.interpretation import interpret_model
-from xgboost import XGBClassifier
 from sklearn.ensemble import RandomForestClassifier
 
 def test_interpret_model_no_crash(tmp_path):
@@ -50,25 +51,31 @@ def test_interpret_model_wrong_model(tmp_path):
     # but let's see if we need to handle that scenario explicitly.
     # Here we simply check that the function didn't raise an exception.
 
+
 def test_interpret_model_empty_data(tmp_path):
     """
-    If X is empty, interpret_model might fail or do nothing. We test that it doesn't crash.
+    Test that interpret_model handles an empty DataFrame gracefully by logging a warning 
+    and not creating any plots. If the output directory is not created, that's acceptable.
     """
-    from sklearn.ensemble import RandomForestClassifier
+    # Create a dummy model that can be fit on minimal data.
     dummy_model = RandomForestClassifier()
-    # Fit on minimal data
-    df = generate_synthetic_data(n_samples=2)
+    df = generate_synthetic_data(n_samples=10)
     preproc = preprocess_data(df)
     X = preproc.drop('sold', axis=1)
     y = preproc['sold']
     dummy_model.fit(X, y)
     
-    # Now pass an empty DataFrame for interpretation
-    empty_df = pd.DataFrame()
-    output_dir = tmp_path / "plots"
+    # Now pass an empty DataFrame for interpretation.
+    output_dir = tmp_path / "interpretation_empty_plots"
+    interpret_model(dummy_model, pd.DataFrame(), save_plots=True, output_dir=str(output_dir))
     
-    interpret_model(dummy_model, empty_df, save_plots=True, output_dir=str(output_dir))
-    # We expect no crash. SHAP might throw warnings or produce empty plots.
+    # If the directory exists, list files, иначе считаем, что файлов нет.
+    if output_dir.exists():
+        files = list(output_dir.iterdir())
+    else:
+        files = []
+    
+    assert len(files) == 0, "No plots should be created for empty input data."
 
 
 def test_interpret_model_save_plots(tmp_path):
@@ -87,22 +94,3 @@ def test_interpret_model_save_plots(tmp_path):
         file_path = output_dir / fname
         assert file_path.exists(), f"Expected file {fname} to be created in {output_dir}"
 
-def test_interpret_model_empty_data(tmp_path):
-    """
-    Test that interpret_model handles an empty DataFrame gracefully by logging a warning and not creating any plots.
-    """
-    # Using a dummy model that can be fit on minimal data.
-    dummy_model = RandomForestClassifier()
-    df = generate_synthetic_data(n_samples=10)
-    preprocessed = preprocess_data(df)
-    X = preprocessed.drop('sold', axis=1)
-    y = preprocessed['sold']
-    dummy_model.fit(X, y)
-    
-    # Pass an empty DataFrame for interpretation.
-    output_dir = tmp_path / "interpretation_empty_plots"
-    interpret_model(dummy_model, pd.DataFrame(), save_plots=True, output_dir=str(output_dir))
-    
-    # Check that no plot files are created.
-    # output_dir may be created by os.makedirs, but should be empty.
-    assert not any(output_dir.iterdir()), "No plots should be created for empty input data."

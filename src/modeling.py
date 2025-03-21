@@ -13,7 +13,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 def train_and_evaluate_model(data: pd.DataFrame, use_smote: bool = True, 
-                             test_size: float = 0.2, random_state: int = 42) -> Tuple[XGBClassifier, pd.DataFrame, pd.Series]:
+                             test_size: float = 0.2, random_state: int = 42,
+                             cv: int = 5) -> Tuple[XGBClassifier, pd.DataFrame, pd.Series]:
     """
     Train and evaluate an XGBoost model on the provided dataset.
 
@@ -21,7 +22,7 @@ def train_and_evaluate_model(data: pd.DataFrame, use_smote: bool = True,
     - Splits the data into features (X) and target (y).
     - Splits data into training and testing sets.
     - Optionally applies SMOTE to balance the training set.
-    - Performs hyperparameter tuning using GridSearchCV.
+    - Performs hyperparameter tuning using GridSearchCV with cv folds.
     - Trains the model and evaluates it using ROC-AUC and F1-score.
     
     Args:
@@ -29,6 +30,7 @@ def train_and_evaluate_model(data: pd.DataFrame, use_smote: bool = True,
         use_smote (bool): Whether to apply SMOTE for balancing the training set.
         test_size (float): Proportion of the data to use as test set.
         random_state (int): Random state for reproducibility.
+        cv (int): Number of folds for cross-validation.
     
     Returns:
         Tuple containing:
@@ -72,8 +74,8 @@ def train_and_evaluate_model(data: pd.DataFrame, use_smote: bool = True,
             'learning_rate': [0.01, 0.1]
         }
         
-        # Perform grid search with 5-fold cross-validation
-        grid_search = GridSearchCV(model, param_grid, cv=5, scoring='roc_auc', n_jobs=-1, verbose=1)
+        # Perform grid search with cv-fold cross-validation
+        grid_search = GridSearchCV(model, param_grid, cv=cv, scoring='roc_auc', n_jobs=-1, verbose=1)
         grid_search.fit(X_train, y_train)
         
         best_model = grid_search.best_estimator_
